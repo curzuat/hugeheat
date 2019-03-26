@@ -1,5 +1,27 @@
 // Make heatmap for arko
 
+process compile {
+	conda "rust git"
+	storeDir '$baseDir/bin/' 
+
+	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
+    
+    input:
+    val repo from "https://github.com/CGUTA/csvmipmap.git"
+
+    output:
+    file 'csvmipmap_b' into binary
+
+
+    """
+    git clone $repo
+    cd csvmipmap/
+    cargo build --release
+    cp target/release/csvmipmap ../csvmipmap_b
+    """
+
+}
+
 raw_file = Channel.fromPath("${params.input_file}")
 	.map { file -> tuple(file.baseName, file) }
 
@@ -9,13 +31,14 @@ process box_sampling_into_long {
     
     input:
     set datasetID, file(dataset_to_convert) from raw_file
+    file csvmipmap from binary
 
     output:
     set datasetID, file("data.csv") into to_normalize
 
 
     """
-    csvmipmap $params.size $dataset_to_convert > data.csv
+    ./$csvmipmap $params.size $dataset_to_convert > data.csv
     """
 
 }
