@@ -2,7 +2,7 @@
 
 process compile {
 	conda "rust git"
-	storeDir '$params.outdir/bin/' 
+	storeDir "$params.outdir/bin/" 
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
     
@@ -10,14 +10,14 @@ process compile {
     val repo from "https://github.com/CGUTA/csvmipmap.git"
 
     output:
-    file 'csvmipmap_b' into binary
+    file 'csvmipmap/target/release/csvmipmap' into binary
 
 
     """
     git clone $repo
     cd csvmipmap/
     cargo build --release
-    cp target/release/csvmipmap ../csvmipmap_b
+    #cp target/release/csvmipmap ../csvmipmap_b
     """
 
 }
