@@ -2,7 +2,7 @@
 
 process compile {
 	conda "rust git"
-	storeDir '$baseDir/bin/' 
+	storeDir '$params.outdir/bin/' 
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
     
