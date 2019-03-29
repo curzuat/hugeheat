@@ -54,9 +54,9 @@ process normalization_colorization {
     
     input:
     set datasetID, file(long_file) from to_normalize
-    file tmatrix  from Channel.fromPath("${baseDir}/data/T")
-    file coldcurves from Channel.fromPath("${baseDir}/data/blue_no_darkening.csv")
-    file hotcurves from Channel.fromPath("${baseDir}/data/fire_no_darkening.csv")
+    file tmatrix  from file("${baseDir}/data/T")
+    file coldcurves from file("${baseDir}/data/blue_no_darkening.csv")
+    file hotcurves from file("${baseDir}/data/fire_no_darkening.csv")
 
     output:
     set datasetID, file("data_output.csv") into to_heat
