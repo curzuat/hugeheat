@@ -239,7 +239,7 @@ process normalization_colorization {
 process render_to_png {
 	conda "scipy numpy pillow"
 
-	publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_t${params.threshold}_$filename" }
+	publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_t${params.threshold}_b${params.size}_$filename" }
 
     label 'pythonscript'
     
