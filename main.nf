@@ -38,7 +38,7 @@ process box_sampling_into_long {
 
 
     """
-    ./$csvmipmap $params.size $dataset_to_convert > data.csv
+    ./$csvmipmap $params.size "$dataset_to_convert" > data.csv
     """
 
 }
