@@ -229,7 +229,22 @@ process normalization_colorization {
 	merged <- melted[conversion_table, ]
 	setnames(merged, "N", "hex_color")
 
-	fwrite(merged[order(-id,-col),.(id,col,hex_color)], "data_output.csv", col.names = FALSE)
+	### pixel to parallelogram in render
+
+	exageration <-c($params.pixel)
+	max_row <- merged[,max(id)]
+	row_exageration <- data.table(id = rep(0:max_row, each=exageration[1]), exagerated_row = 0:(max_row*exageration[1]))
+
+	max_col <- merged[,max(col)]
+	col_exageration <- data.table(col = rep(0:max_col, each=exageration[2]), exagerated_col = 0:(max_col*exageration[2]))
+
+	exagerated_merged <- merged[row_exageration, on="id", allow.cartesian=T][col_exageration, on="col", allow.cartesian=T][order(-exagerated_row,-exagerated_col),.(exagerated_row,exagerated_col,hex_color)]
+
+	##
+
+
+	fwrite(exagerated_merged, "data_output.csv", col.names = FALSE)
+	#fwrite(merged[order(-id,-col),.(id, col, hex_color)], "data_output.csv", col.names = FALSE)
     """
 
 }
@@ -267,7 +282,7 @@ with open("$long_file") as f:
         record = line.strip().split(",")
         x, y, = [int(x) for x in record[:2]]
         color = record[2]
-        #print(x,y,color)
+        print(x,y,color)
         if created:
             render(x,y,color)
         else:
