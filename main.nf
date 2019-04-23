@@ -231,12 +231,14 @@ process normalization_colorization {
 
 	### pixel to parallelogram in render
 
+
 	exageration <-c($params.pixel)
 	max_row <- merged[,max(id)]
-	row_exageration <- data.table(id = rep(0:max_row, each=exageration[1]), exagerated_row = 0:(max_row*exageration[1]))
+	#row_exageration <- data.table(id = rep(0:max_row, each=exageration[1]), exagerated_row = 0:(max_row*exageration[1]))
+	row_exageration <- data.table(id = rep(0:max_row, each=exageration[1]), exagerated_row = 0:((max_row+1)*exageration[1] -1))
 
 	max_col <- merged[,max(col)]
-	col_exageration <- data.table(col = rep(0:max_col, each=exageration[2]), exagerated_col = 0:(max_col*exageration[2]))
+	col_exageration <- data.table(col = rep(0:max_col, each=exageration[2]), exagerated_col = 0:((max_col+1)*exageration[2] -1))
 
 	exagerated_merged <- merged[row_exageration, on="id", allow.cartesian=T][col_exageration, on="col", allow.cartesian=T][order(-exagerated_row,-exagerated_col),.(exagerated_row,exagerated_col,hex_color)]
 
@@ -254,7 +256,7 @@ process normalization_colorization {
 process render_to_png {
 	conda "scipy numpy pillow"
 
-	publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_t${params.threshold}_b${params.size}_$filename" }
+	publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_t${params.threshold}_b${params.size}_p${params.pixel}_$filename" }
 
     label 'pythonscript'
     
@@ -271,6 +273,7 @@ process render_to_png {
 
 import numpy as np
 import scipy.misc as smp
+from PIL import Image
 
 def render(x, y, color):
     data[x, y][0], data[x, y][1], data[x, y][2]= [int(x) for x in color.split("_")]
@@ -290,11 +293,10 @@ with open("$long_file") as f:
             render(x,y,color)
             created = True
         
-img = smp.toimage( data )       # Create a PIL image
+img = Image.fromarray(data)       # Create a PIL image
 smp.imsave('heatmap.png', img)  
 """
 
 }
-
 
 
