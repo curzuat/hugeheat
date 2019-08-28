@@ -117,6 +117,10 @@ process normalization_colorization {
 	 color_negative <- x[2]
 	 proportion <- x[3]
 	 intensity <- x[4]
+
+	if("$params.intensity" == "false"){
+		intensity = 1.0
+	}
 	 
 	 sRGB_to_linear <- function(rgb){
 	    out <- numeric(length = length(rgb))

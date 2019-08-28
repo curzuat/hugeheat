@@ -26,7 +26,7 @@ OPTIONAL
 --pixel \ #[Int, Int] # width and height in pixels that cell will be rendered into
 --background_color_u8 \ #[0-255] from black to white (default 155)
 --threshold #[0-1] truncating threshold (default 0.99)
-
+--intensity #false set to draw all pixels with equal intensity
 EXAMPLE USAGE
 
 nextflow run CGUTA/hugeheat \
