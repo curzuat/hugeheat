@@ -233,6 +233,47 @@ process normalization_colorization {
 	merged <- melted[conversion_table, ]
 	setnames(merged, "N", "hex_color")
 
+	### Adding gaps in heatmap #####
+
+	calcualte_gap_mapping <- function(gap_dir, compression_size){ 
+		# Depending on kernel size gaps must be adjusted
+
+		gaps <- fread("$params.gaps", nrows = 21)
+		gaps[,.(mapped_position = floor(position/compression_size))][, mapped_position]
+	}
+
+	carve_gap <- function(what, gap_size, gap_locations){
+
+
+		i_operation <- "{what} >= i" %>% glue %>% parse(text = .)
+		j_operation <- "{what} := {what} + {gap_size}" %>% glue %>% parse(text = .)
+
+		for (i in sort(gap_locations, decreasing = T)){
+			merged[ eval(i_operation), eval(j_operation)] #  pixel gap
+		}
+		
+	}
+
+	default_gap_size <- 5
+
+	gap_size <- ifelse("$params.gap_size" == "null", default_gap_size, $params.gap_size)
+	vertical_gap_size <- ifelse("$params.vertical_gap_size" == "null", gap_size, $params.vertical_gap_size)
+	horizontal_gap_size <- ifelse("$params.horizontal_gap_size" == "null", gap_size, $params.horizontal_gap_size)
+
+	horizontal_compression <- strsplit("${params.size}", split=",")[[1]][1] %>% as.numeric()
+	vertical_compression <- strsplit("${params.size}", split=",")[[1]][2] %>% as.numeric()
+
+
+	if("$params.vertical_gap" != "null") {
+		carve_gap("col", vertical_gap_size, calcualte_gap_mapping("$params.vertical_gap", horizontal_compression))
+	}
+	if("$params.horizontal_gap" != "null") {
+		carve_gap("id", horizontal_gap_size, calcualte_gap_mapping("$params.horizontal_gap", vertical_compression))
+	}
+
+
+	###
+
 	### pixel to parallelogram in render
 
 
