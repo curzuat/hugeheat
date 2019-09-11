@@ -1,5 +1,5 @@
 // Make heatmap for arko
-
+params.outdir="."
 process compile {
 	conda "rust git"
 	storeDir "$params.outdir/bin/" 
@@ -25,6 +25,8 @@ process compile {
 raw_file = Channel.fromPath("${params.input_file}")
 	.map { file -> tuple(file.baseName, file) }
 
+params.size = '1,1'
+params.pixel = '1,1'
 process box_sampling_into_long {
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
@@ -43,10 +45,16 @@ process box_sampling_into_long {
 
 }
 
-
+params.default_gap_size = 'NOT_PROVIDED'
+params.column_gap_size = 'NOT_PROVIDED'
+params.row_gap_size = 'NOT_PROVIDED'
+params.intensity = 'NOT_PROVIDED'
+params.column_gaps = 'NO_FILE_COLUMNS'
+params.row_gaps = 'NO_FILE_ROWS'
+params.grid = 'NO_FILE_GRID'
 
 process normalization_colorization {
-	conda "r-base r-magrittr r-data.table"
+	conda "r-base r-magrittr r-data.table r-glue"
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_$filename" }
 
@@ -57,6 +65,9 @@ process normalization_colorization {
     file tmatrix  from file("${baseDir}/data/T")
     file coldcurves from file("${baseDir}/data/blue_no_darkening.csv")
     file hotcurves from file("${baseDir}/data/fire_no_darkening.csv")
+    file column_gaps from file(params.column_gaps)
+    file row_gaps from file(params.row_gaps)
+    file grid from file(params.grid) 
 
     output:
     set datasetID, file("data_output.csv") into to_heat
@@ -66,6 +77,7 @@ process normalization_colorization {
     #!/usr/bin/env Rscript
     library(data.table)
     library(magrittr)
+    library(glue)
 
 
 
@@ -238,7 +250,7 @@ process normalization_colorization {
 	calcualte_gap_mapping <- function(gap_dir, compression_size){ 
 		# Depending on kernel size gaps must be adjusted
 
-		gaps <- fread("$params.gaps", nrows = 21)
+		gaps <- fread(gap_dir)
 		gaps[,.(mapped_position = floor(position/compression_size))][, mapped_position]
 	}
 
@@ -254,22 +266,27 @@ process normalization_colorization {
 		
 	}
 
-	default_gap_size <- 5
 
-	gap_size <- ifelse("$params.gap_size" == "null", default_gap_size, $params.gap_size)
-	vertical_gap_size <- ifelse("$params.vertical_gap_size" == "null", gap_size, $params.vertical_gap_size)
-	horizontal_gap_size <- ifelse("$params.horizontal_gap_size" == "null", gap_size, $params.horizontal_gap_size)
+	# default_gap_size will be used if no gap specified
+	gap_size <- ifelse("$params.default_gap_size" == "NOT_PROVIDED", 5, $params.default_gap_size) # hardcoded default gap size
+	vertical_gap_size <- ifelse("$params.column_gap_size" == "NOT_PROVIDED", gap_size, $params.column_gap_size)
+	horizontal_gap_size <- ifelse("$params.row_gap_size" == "NOT_PROVIDED", gap_size, $params.row_gap_size)
 
 	horizontal_compression <- strsplit("${params.size}", split=",")[[1]][1] %>% as.numeric()
 	vertical_compression <- strsplit("${params.size}", split=",")[[1]][2] %>% as.numeric()
 
 
-	if("$params.vertical_gap" != "null") {
-		carve_gap("col", vertical_gap_size, calcualte_gap_mapping("$params.vertical_gap", horizontal_compression))
+	if("$params.column_gaps" != "NO_FILE_COLUMNS") {
+		carve_gap("col", vertical_gap_size, calcualte_gap_mapping("$column_gaps", horizontal_compression))
 	}
-	if("$params.horizontal_gap" != "null") {
-		carve_gap("id", horizontal_gap_size, calcualte_gap_mapping("$params.horizontal_gap", vertical_compression))
+	if("$params.row_gaps" != "NO_FILE_ROWS") {
+		carve_gap("id", horizontal_gap_size, calcualte_gap_mapping("$row_gaps", vertical_compression))
 	}
+	if("$params.grid" != "NO_FILE_GRID") {
+		carve_gap("id", horizontal_gap_size, calcualte_gap_mapping("$grid", vertical_compression))
+		carve_gap("col", vertical_gap_size, calcualte_gap_mapping("$grid", horizontal_compression))
+	}
+
 
 
 	###
@@ -285,7 +302,7 @@ process normalization_colorization {
 	max_col <- merged[,max(col)]
 	col_exageration <- data.table(col = rep(0:max_col, each=exageration[2]), exagerated_col = 0:((max_col+1)*exageration[2] -1))
 
-	exagerated_merged <- merged[row_exageration, on="id", allow.cartesian=T][col_exageration, on="col", allow.cartesian=T][order(-exagerated_row,-exagerated_col),.(exagerated_row,exagerated_col,hex_color)]
+	exagerated_merged <- merged[row_exageration, on="id", allow.cartesian=T][col_exageration, on="col", allow.cartesian=T][order(-exagerated_row,-exagerated_col),.(exagerated_row,exagerated_col,hex_color)][!is.na(hex_color)]
 
 	##
 
