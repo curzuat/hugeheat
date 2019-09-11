@@ -22,19 +22,34 @@ REQUIRED
 OPTIONAL
 
 --outdir \ #[path] where you want the heatmap to be printed (default .)
---size \ #[Int,Int] # width and height of the binning tile (default 1,1)
---pixel \ #[Int, Int] # width and height in pixels that cell will be rendered into
+--size \ #[Int,Int] # width and height of the binning tile (default 1,1 no binning)
+--pixel \ #[Int, Int] # width and height in pixels that cell will be rendered into (default 1,1 no distortion)
 --background_color_u8 \ #[0-255] from black to white (default 155)
---threshold #[0-1] truncating threshold (default 0.99)
---intensity #false set to draw all pixels with equal intensity
+--threshold \ #[0-1] truncating threshold (default 0.99)
+--intensity \ #[true/false] smaller values get less saturated colors; set false to cancel this adjustment (default true)
+
+	GAPs
+	Gap file: A TSV with at least one column header 'position' where gaps should be drawn (data.table header)
+
+	--column_gaps \ #[path] to Gap file, must not be same name as --row_gaps (see grid)
+	--row_gaps \ #[path] to Gap file, must not be same name as --column_gaps (see grid)
+	--grid \ #[path] to Gap file, will be applied both row and column wise
+
+	--default_gap_size \ #[Int] pixel size to be applied to any gap where no specific sizes were provided (default 5)
+	--column_gap_size \ #[Int] pixel size to be applied to row gaps (overrides default)
+	--row_gap_size \ #[Int] pixel size to be applied to column gaps (override default)
+
 EXAMPLE USAGE
 
 nextflow run CGUTA/hugeheat \
 --input_file my_big_matrix_with_header.csv \
 --outdir . \
 --size 2,1 \ # bin the rows in sets of two leave cols alone 
---pixel 1,5 \ # plot cell into a rectangle 5 pixels wide and one pixel of height
---threshold 1 \ # values are scaled to 0-255 but no truncation ocurrs
+--pixel 1,5 \ # plot every cell into a rectangle 5 pixels wide and one pixel of height
+--threshold 1 \ # values are scaled to 0-255 but no truncation ocurrs (truncated to max value)
+--grid gap_file.csv \ # with positions where the grid will be drawn
+--column_gap_size 2 \ # row gaps are drawn with the default gap size column gaps with 2 pixel
+
 
 
 ILLUSTRATIVE EXAMPLE OF BINNING PROCEDURE
