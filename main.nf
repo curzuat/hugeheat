@@ -22,7 +22,9 @@ process compile {
 
 }
 
-raw_file = Channel.fromPath("${params.input_file}")
+log1 = Channel.create().subscribe { println "Log 1: $it" }
+
+raw_file = Channel.fromPath("$params.input_file").tap(log1)
 	.map { file -> tuple(file.baseName, file) }
 
 params.size = '1,1'
@@ -53,8 +55,15 @@ params.column_gaps = 'NO_FILE_COLUMNS'
 params.row_gaps = 'NO_FILE_ROWS'
 params.grid = 'NO_FILE_GRID'
 
+params.truncate_positive_at = 'NOT_PROVIDED'
+params.truncate_negative_at = 'NOT_PROVIDED'
+params.truncate_extremes_at = 'NOT_PROVIDED'
+params.automatic_threshold = 'NOT_PROVIDED'
+
+
 process normalization_colorization {
 	conda "r-base r-magrittr r-data.table r-glue"
+	//echo true
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_$filename" }
 
@@ -200,14 +209,14 @@ process normalization_colorization {
 
 	head(melted)
 
+	default_truncation <- ifelse("$params.truncate_extremes_at" == "NOT_PROVIDED", 1.0, $params.truncate_extremes_at) # hardcoded default
+	truncate_positive_at <- ifelse("$params.truncate_positive_at" == "NOT_PROVIDED", default_truncation, $params.truncate_positive_at)
+	truncate_negative_at <- ifelse("$params.truncate_negative_at" == "NOT_PROVIDED", default_truncation, $params.truncate_negative_at)
 
+	threshold <- ifelse("$params.automatic_threshold" == "NOT_PROVIDED", 1, $params.automatic_threshold) # hardcoded default
 
-	threshold <- $params.threshold
-
-	max <- quantile(melted[,value], probs = c(threshold))
-
-	min <- quantile(melted[,value_negative], probs = c(1 - threshold))
-	#max <- min * -1
+	max <- ifelse("$params.automatic_threshold" == "NOT_PROVIDED", truncate_positive_at, quantile(melted[,value], probs = c(threshold)))
+	min <- ifelse("$params.automatic_threshold" == "NOT_PROVIDED", -truncate_negative_at, quantile(melted[,value_negative], probs = c(1 - threshold)))
 
 	melted[value > max, value := max]
 	melted[value_negative < min, value_negative := min]
