@@ -1,7 +1,6 @@
 // Make heatmap for arko
 params.outdir="."
 process compile {
-	conda "rust git"
 	storeDir "$params.outdir/bin/" 
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
@@ -62,7 +61,6 @@ params.automatic_threshold = 'NOT_PROVIDED'
 
 
 process normalization_colorization {
-	conda "r-base r-magrittr r-data.table r-glue"
 	//echo true
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_$filename" }
@@ -325,7 +323,6 @@ process normalization_colorization {
 
 
 process render_to_png {
-	conda "scipy numpy pillow"
 
 	publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_t${params.threshold}_b${params.size}_p${params.pixel}_$filename" }
 
