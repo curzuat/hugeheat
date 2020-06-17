@@ -321,7 +321,6 @@ process normalization_colorization {
 }
 
 process compile_display {
-	conda "conda-forge::rust git"
 	storeDir "$params.outdir/bin/" 
 
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
