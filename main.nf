@@ -21,9 +21,9 @@ process compile {
 
 }
 
-log1 = Channel.create().subscribe { println "Log 1: $it" }
+//log1 = Channel.create().subscribe { println "Log 1: $it" }
 
-raw_file = Channel.fromPath("$params.input_file").tap(log1)
+raw_file = Channel.fromPath("$params.input_file")
 	.map { file -> tuple(file.baseName, file) }
 
 params.size = '1,1'
@@ -320,50 +320,45 @@ process normalization_colorization {
 
 }
 
+process compile_display {
+	conda "conda-forge::rust git"
+	storeDir "$params.outdir/bin/" 
+
+	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
+    
+    input:
+    val repo from "https://github.com/CGUTA/display_heatmap.git"
+
+    output:
+    file 'display_heatmap/target/release/display_heatmap' into binary_display
+
+
+    """
+    git clone $repo
+    cd display_heatmap/
+    cargo build --release
+    """
+
+}
+
 
 
 process render_to_png {
 
 	publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_t${params.threshold}_b${params.size}_p${params.pixel}_$filename" }
 
-    label 'pythonscript'
     
     input:
     set datasetID, file(long_file) from to_heat
+    file display from binary_display
 
     output:
     file "heatmap.png" into out
 
 
-"""
-#!/usr/bin/env python3
-
-
-import numpy as np
-import scipy.misc as smp
-from PIL import Image
-
-def render(x, y, color):
-    data[x, y][0], data[x, y][1], data[x, y][2]= [int(x) for x in color.split("_")]
-
-
-with open("$long_file") as f:
-    created = False
-    for line in f:
-        record = line.strip().split(",")
-        x, y, = [int(x) for x in record[:2]]
-        color = record[2]
-        print(x,y,color)
-        if created:
-            render(x,y,color)
-        else:
-            data = np.full( (x+1,y+1,3), $params.background_color_u8, dtype=np.uint8)
-            render(x,y,color)
-            created = True
-        
-img = Image.fromarray(data)       # Create a PIL image
-smp.imsave('heatmap.png', img)  
-"""
+	"""
+	./$display "$long_file"
+	"""
 
 }
 
