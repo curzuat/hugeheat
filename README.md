@@ -28,6 +28,9 @@ OPTIONAL
 --threshold \ #[0-1] truncating threshold (default 0.99)
 --intensity \ #[true/false] smaller values get less saturated colors; set false to cancel this adjustment (default true)
 
+	Colors
+	--bicolor \ #[str] where str is one or two comma separated hex colors (e.g. #FFFFFF #000000,#CAFFEE) these colors are then used instead of default for positive and negative numbers.
+
 	GAPs
 	Gap file: A TSV with at least one column header 'position' where gaps should be drawn (data.table header)
 

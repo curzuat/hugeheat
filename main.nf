@@ -59,6 +59,8 @@ params.truncate_negative_at = 'NOT_PROVIDED'
 params.truncate_extremes_at = 'NOT_PROVIDED'
 params.automatic_threshold = 'NOT_PROVIDED'
 
+params.bicolor == 'NOT_PROVIDED'
+
 
 process normalization_colorization {
 	//echo true
@@ -189,13 +191,20 @@ process normalization_colorization {
     	col2rgb(hex)[,1]
 	}
 
-	#background_color <- hex_to_rgb("#e5e5e5")
-	background_color <- hex_to_rgb("#000000")
-	#background_color <- hex_to_rgb("#ffffff")
+	background_color <- hex_to_rgb("$params.background_color")
 	 
 	 if(!is.na(proportion)){
 	   
-	   color <- colormix(fire[[color]], blue[[color_negative]], proportion) %>% rgb_mix(background_color, intensity) %>% into_string
+	   if("$params.bicolor" == "NOT_PROVIDED"){ 
+			color <- colormix(fire[[color]], blue[[color_negative]], proportion) %>% rgb_mix(background_color, intensity) %>% into_string
+	   } 
+	   else {
+	   		color_pair <- "$params.bicolor" %>% strsplit(",") %>% unlist
+	   		color_positive <- color_pair[1] %>% hex_to_rgb
+	   		color_negative <- ifelse(length(color_pair) == 2, color_pair[2] %>% hex_to_rgb, color_positive)
+
+	   		color <- rgb_mix(color_positive, color_negative, proportion) %>% rgb_mix(background_color, intensity) %>% into_string
+	   }
 	   
 	 } else {
 	   
