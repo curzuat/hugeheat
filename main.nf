@@ -59,7 +59,7 @@ params.truncate_negative_at = 'NOT_PROVIDED'
 params.truncate_extremes_at = 'NOT_PROVIDED'
 params.automatic_threshold = 'NOT_PROVIDED'
 
-params.bicolor == 'NOT_PROVIDED'
+params.bicolor = 'NOT_PROVIDED'
 
 
 process normalization_colorization {
