@@ -42,7 +42,8 @@ OPTIONAL
 	--column_gap_size \ #[Int] pixel size to be applied to row gaps (overrides default)
 	--row_gap_size \ #[Int] pixel size to be applied to column gaps (override default)
 
---profiles conda # to run with conda (default standard)
+-profile conda # to run with conda (default: standard)
+
 EXAMPLE USAGE
 
 nextflow run CGUTA/hugeheat \
