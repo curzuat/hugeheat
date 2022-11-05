@@ -335,7 +335,7 @@ process compile_display {
 	//publishDir "$params.outdir/", mode: 'copy', saveAs: { filename -> "${datasetID}_reduced_$filename" }
     
     input:
-    val repo from "https://github.com/CGUTA/display_heatmap.git"
+    val repo from "https://github.com/curzuat/display_heatmap.git"
 
     output:
     file 'display_heatmap/target/release/display_heatmap' into binary_display
